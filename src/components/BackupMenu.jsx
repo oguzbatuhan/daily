@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { DownloadIcon, FileTextIcon, ShieldIcon, UploadIcon } from "./Icons.jsx";
 
 const menuItem =
-  "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-[var(--hover)]";
+  "flex min-h-11 w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-[var(--hover)]";
 
 // Header shield button: download a JSON backup, restore from one, or export plain text.
 // Restoring never overwrites: it merges with what is already on this device (newest change wins).
@@ -31,7 +31,7 @@ export default function BackupMenu({ lastBackup, count, onExportJson, onExportTe
     : "Henüz yedek alınmadı";
 
   return (
-    <div className="relative" ref={box}>
+    <div ref={box}>
       <button
         type="button"
         aria-haspopup="menu"
@@ -46,7 +46,7 @@ export default function BackupMenu({ lastBackup, count, onExportJson, onExportTe
       {menu ? (
         <div
           role="menu"
-          className="absolute right-0 top-full z-20 mt-2 w-64 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-1.5 shadow-xl"
+          className="absolute right-0 top-full z-20 mt-2 w-64 max-w-[calc(100vw-2.5rem)] rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-1.5 shadow-xl"
         >
           <p className="px-3 pb-1.5 pt-2 text-xs text-[var(--muted)]">
             {count} yazı · {when}

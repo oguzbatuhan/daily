@@ -21,7 +21,7 @@ export function DayToggle({ count, open, onToggle }) {
       type="button"
       onClick={onToggle}
       aria-expanded={open}
-      className="mt-3 flex w-full items-center gap-1.5 rounded-lg py-1 text-xs font-medium text-[var(--muted)] hover:text-[var(--fg)]"
+      className="mt-1 flex min-h-11 w-full items-center gap-1.5 rounded-lg text-xs font-medium text-[var(--muted)] hover:text-[var(--fg)]"
     >
       <span className={"inline-flex transition-transform " + (open ? "" : "-rotate-90")}>
         <ChevronIcon dir="down" />
@@ -62,7 +62,7 @@ export function EntryRow({ entry, onEdit, onRemove, onTag, reveal = false, force
     }
   }, [confirming]);
 
-  const wrap = "border-b border-[var(--line)] py-3.5 last:border-b-0 " + (reveal ? "task-in" : "");
+  const wrap = reveal ? "task-in" : "";
 
   return (
     <li className={wrap}>
@@ -70,7 +70,7 @@ export function EntryRow({ entry, onEdit, onRemove, onTag, reveal = false, force
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={expanded}
-        className="flex w-full items-start gap-3 rounded-lg text-left"
+        className="-mx-2 flex min-h-[3.25rem] w-[calc(100%+1rem)] items-start gap-3 rounded-xl px-2 py-3 text-left transition-colors hover:bg-[var(--hover)]"
       >
         <span className="tabular mt-0.5 w-11 shrink-0 text-sm text-[var(--muted)]">{timeText(entry.createdAt)}</span>
         <span className="min-w-0 flex-1">
@@ -96,7 +96,7 @@ export function EntryRow({ entry, onEdit, onRemove, onTag, reveal = false, force
       </button>
 
       {expanded ? (
-        <div className="ml-14 mt-2">
+        <div className="task-in ml-14 pb-2">
           <p className="whitespace-pre-wrap break-words text-[0.9375rem] leading-7">{entry.body}</p>
           {entry.tags.length ? (
             <div className="mt-3 flex flex-wrap gap-1.5">
@@ -108,31 +108,38 @@ export function EntryRow({ entry, onEdit, onRemove, onTag, reveal = false, force
             </div>
           ) : null}
 
-          {confirming ? (
-            <div role="alertdialog" aria-label="Silme onayı" className="mt-3 flex items-center gap-2">
-              <span className="min-w-0 flex-1 text-sm">Silinsin mi?</span>
-              <button ref={cancelRef} type="button" onClick={() => setConfirming(false)} className="btn btn-ghost btn-sm">
-                Vazgeç
-              </button>
-              <button type="button" onClick={() => onRemove(entry.id)} className="btn btn-warn btn-sm">
-                Sil
-              </button>
-            </div>
-          ) : (
-            <div className="-ml-2 mt-2 flex items-center gap-1">
-              <button type="button" onClick={() => onEdit(entry.id)} className="link-btn inline-flex items-center gap-1.5">
-                <EditIcon /> Düzenle
-              </button>
-              <button
-                ref={trashRef}
-                type="button"
-                onClick={() => setConfirming(true)}
-                className="link-btn inline-flex items-center gap-1.5"
-              >
-                <TrashIcon /> Sil
-              </button>
-            </div>
-          )}
+          <div className="mt-3 flex min-h-[2.5rem] items-center gap-2">
+            {confirming ? (
+              <div role="alertdialog" aria-label="Silme onayı" className="flex w-full items-center gap-2">
+                <span className="min-w-0 flex-1 text-sm">Silinsin mi?</span>
+                <button ref={cancelRef} type="button" onClick={() => setConfirming(false)} className="btn btn-ghost btn-sm">
+                  Vazgeç
+                </button>
+                <button type="button" onClick={() => onRemove(entry.id)} className="btn btn-warn btn-sm">
+                  Sil
+                </button>
+              </div>
+            ) : (
+              <>
+                <span className="tabular min-w-0 flex-1 text-xs text-[var(--muted)]">
+                  {wordCount(entry.body)} kelime
+                </span>
+                <button type="button" onClick={() => onEdit(entry.id)} className="btn btn-ghost btn-sm gap-1.5">
+                  <EditIcon />
+                  Düzenle
+                </button>
+                <button
+                  ref={trashRef}
+                  type="button"
+                  onClick={() => setConfirming(true)}
+                  className="btn btn-sm min-w-0 gap-1.5 border-[var(--line-strong)] text-[var(--warn)] hover:bg-[var(--hover)]"
+                >
+                  <TrashIcon />
+                  Sil
+                </button>
+              </>
+            )}
+          </div>
         </div>
       ) : null}
     </li>

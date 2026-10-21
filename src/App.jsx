@@ -201,60 +201,64 @@ export default function App() {
 
   return (
     <main className="mx-auto w-full max-w-xl">
-      <header className="mb-6 flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-xl font-medium tracking-tight">Günlük</h1>
-          <p className="tabular mt-0.5 flex items-center gap-2 text-sm text-[var(--muted)]">
-            <span>{todayCount > 0 ? "Bugün " + todayCount + " yazı" : "Bugün henüz yazmadın"}</span>
-            {days > 0 ? (
-              <span className="inline-flex items-center gap-1 text-[var(--accent)]" title="Üst üste yazılan gün sayısı">
-                <FlameIcon />
-                {days} gün
-              </span>
-            ) : null}
-            {days > 0 ? (
-              <span
-                className="inline-flex items-center gap-0.5"
-                title={
-                  "Seri koruması: bu hafta " +
-                  freezesLeft +
-                  "/" +
-                  FREEZES_PER_WEEK +
-                  " hakkın var. Yazmadığın bir günde otomatik kullanılır, her pazartesi yenilenir."
-                }
-                aria-label={"Bu hafta " + freezesLeft + " seri koruması hakkın var"}
-              >
-                {Array.from({ length: FREEZES_PER_WEEK }, (_, i) => (
-                  <span key={i} className={i < freezesLeft ? "text-[var(--accent)]" : "opacity-30"}>
-                    <FreezeIcon />
-                  </span>
-                ))}
-              </span>
-            ) : null}
-          </p>
+      <header className="mb-6">
+        {/* Menus of the two buttons anchor to this row, so they never run off the screen edge */}
+        <div className="relative flex items-center justify-between gap-3">
+          <h1 className="min-w-0 truncate text-xl font-medium tracking-tight">Günlük</h1>
+          <div className="flex shrink-0 items-center gap-2">
+            <BackupMenu
+              lastBackup={lastBackup}
+              count={live.length}
+              onExportJson={exportJson}
+              onExportText={exportText}
+              onImport={importFile}
+            />
+            <SyncBar sync={sync} />
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <BackupMenu
-            lastBackup={lastBackup}
-            count={live.length}
-            onExportJson={exportJson}
-            onExportText={exportText}
-            onImport={importFile}
-          />
-          <SyncBar sync={sync} />
-        </div>
+        <p className="tabular mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-[var(--muted)]">
+          <span className="whitespace-nowrap">{todayCount > 0 ? "Bugün " + todayCount + " yazı" : "Bugün henüz yazmadın"}</span>
+          {days > 0 ? (
+            <span
+              className="inline-flex items-center gap-1 whitespace-nowrap text-[var(--accent)] [&>svg]:shrink-0"
+              title="Üst üste yazılan gün sayısı"
+            >
+              <FlameIcon />
+              {days} gün
+            </span>
+          ) : null}
+          {days > 0 ? (
+            <span
+              className="inline-flex items-center gap-0.5 [&>span]:shrink-0"
+              title={
+                "Seri koruması: bu hafta " +
+                freezesLeft +
+                "/" +
+                FREEZES_PER_WEEK +
+                " hakkın var. Yazmadığın bir günde otomatik kullanılır, her pazartesi yenilenir."
+              }
+              aria-label={"Bu hafta " + freezesLeft + " seri koruması hakkın var"}
+            >
+              {Array.from({ length: FREEZES_PER_WEEK }, (_, i) => (
+                <span key={i} className={i < freezesLeft ? "text-[var(--accent)]" : "opacity-30"}>
+                  <FreezeIcon />
+                </span>
+              ))}
+            </span>
+          ) : null}
+        </p>
       </header>
 
       {showNudge ? (
         <div
           role="status"
-          className="mb-5 flex items-center gap-3 rounded-2xl bg-[var(--accent-soft)] px-4 py-3 text-sm text-[var(--accent)]"
+          className="mb-5 flex items-center gap-2 rounded-2xl bg-[var(--accent-soft)] py-2.5 pl-4 pr-2 text-[0.8125rem] leading-5 text-[var(--accent)]"
         >
           <span className="min-w-0 flex-1">
-            Yazıların şu an yalnızca bu cihazda. Üstteki kalkan simgesinden yedek al
+            Yazıların yalnızca bu cihazda. Üstteki kalkan simgesinden yedek al
             {sync.configured ? " ya da Drive’a bağlan." : "."}
           </span>
-          <button type="button" className="link-btn shrink-0" onClick={() => setNudgeHidden(true)}>
+          <button type="button" className="link-btn shrink-0 !px-3 !py-2" onClick={() => setNudgeHidden(true)}>
             Sonra
           </button>
         </div>

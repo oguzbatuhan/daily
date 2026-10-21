@@ -8,7 +8,7 @@ const pillNeutral =
 const pillAccent = "border-transparent bg-[var(--accent-soft)] text-[var(--accent)] hover:opacity-85";
 const pillWarn = "border-[var(--warn)] text-[var(--warn)] hover:bg-[var(--hover)]";
 const menuItem =
-  "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-[var(--hover)]";
+  "flex min-h-11 w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-[var(--hover)]";
 
 function timeText(ms) {
   return new Date(ms).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
@@ -62,7 +62,7 @@ export default function SyncBar({ sync }) {
   const label = failed ? "Hata" : syncing ? "Eşitleniyor" : lastSynced ? timeText(lastSynced) : "Drive";
 
   return (
-    <div className="relative" ref={box}>
+    <div ref={box}>
       <button
         type="button"
         aria-haspopup="menu"
@@ -82,7 +82,7 @@ export default function SyncBar({ sync }) {
       {menu ? (
         <div
           role="menu"
-          className="absolute right-0 top-full z-20 mt-2 w-56 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-1.5 shadow-xl"
+          className="absolute right-0 top-full z-20 mt-2 w-56 max-w-[calc(100vw-2.5rem)] rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-1.5 shadow-xl"
         >
           <p className="px-3 pb-1.5 pt-2 text-xs text-[var(--muted)]">
             {failed && error

@@ -67,6 +67,16 @@
   html {
     background: var(--bg);
     min-height: 100%;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  button,
+  a,
+  label,
+  summary,
+  [role="button"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
   body {
     background: var(--bg);
@@ -399,4 +409,35 @@
   .toast {
     animation: none !important;
   }
+}
+
+/* Phones: text fields must be at least 16px, otherwise iOS Safari zooms the page when one is focused */
+@media (max-width: 640px) {
+  .search-field input,
+  .tag-field input,
+  .tag-input,
+  .title-input {
+    font-size: 16px;
+  }
+}
+
+/* Touch screens: chips and small buttons get a comfortable tap height */
+@media (pointer: coarse) {
+  .tag-chip {
+    min-height: 2rem;
+    display: inline-flex;
+    align-items: center;
+  }
+  .link-btn {
+    min-height: 2.5rem;
+  }
+}
+
+/* Horizontally scrolling chip row without a visible scrollbar */
+.scroll-row {
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.scroll-row::-webkit-scrollbar {
+  display: none;
 }

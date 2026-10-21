@@ -20,6 +20,7 @@ function TagEditor({ tags, onChange, suggestions }) {
   );
 
   return (
+    <div className="flex flex-col gap-2">
     <div className="flex flex-wrap items-center gap-1.5">
       {tags.map((t) => (
         <button
@@ -51,22 +52,25 @@ function TagEditor({ tags, onChange, suggestions }) {
             }
           }}
           onBlur={() => add(text)}
-          placeholder={tags.length ? "" : "# etiket ekle"}
+          placeholder={tags.length ? "+ etiket" : "# etiket ekle"}
           aria-label="Etiket"
           autoComplete="off"
           autoCapitalize="none"
           spellCheck={false}
           enterKeyHint="done"
-          className="h-7 w-28 min-w-0 bg-transparent text-[0.8125rem] outline-none placeholder:text-[var(--muted)]"
+          className="tag-input h-8 w-24 min-w-0 bg-transparent text-[0.8125rem] outline-none placeholder:text-[var(--muted)]"
         />
       ) : null}
-      {!text && !full
-        ? left.slice(0, 4).map((s) => (
-            <button key={s} type="button" className="tag-chip quiet" onClick={() => add(s)}>
-              {s}
-            </button>
-          ))
-        : null}
+    </div>
+    {!text && !full && left.length > 0 ? (
+      <div className="scroll-row -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5">
+        {left.slice(0, 6).map((s) => (
+          <button key={s} type="button" className="tag-chip quiet shrink-0" onClick={() => add(s)}>
+            {s}
+          </button>
+        ))}
+      </div>
+    ) : null}
     </div>
   );
 }
@@ -134,6 +138,21 @@ export default function Composer({
     if (e.key === "Escape" && onCancel) onCancel();
   };
 
+  // Focus mode follows the visible area so the on-screen keyboard never covers the save row
+  const [vv, setVv] = useState(null);
+  useEffect(() => {
+    if (!big || !window.visualViewport) return;
+    const vp = window.visualViewport;
+    const update = () => setVv({ h: vp.height, top: vp.offsetTop });
+    update();
+    vp.addEventListener("resize", update);
+    vp.addEventListener("scroll", update);
+    return () => {
+      vp.removeEventListener("resize", update);
+      vp.removeEventListener("scroll", update);
+    };
+  }, [big]);
+
   const set = (patch) => onChange({ ...value, ...patch });
 
   const inner = (
@@ -173,16 +192,16 @@ export default function Composer({
       />
       <div className="mt-3 flex flex-col gap-3 border-t border-[var(--line)] pt-3">
         <TagEditor tags={value.tags} onChange={(tags) => set({ tags })} suggestions={suggestions} />
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
           <MoodPicker value={value.mood} onChange={(mood) => set({ mood })} />
           <span className="flex-1" aria-hidden="true"></span>
-          <span className="tabular text-xs text-[var(--muted)]">{words > 0 ? words + " kelime" : ""}</span>
+          {words > 0 ? <span className="tabular text-xs text-[var(--muted)]">{words} kelime</span> : null}
           {onCancel && !big ? (
             <button type="button" onClick={onCancel} className="btn btn-ghost btn-sm">
               Vazgeç
             </button>
           ) : null}
-          <button type="button" onClick={onSubmit} disabled={blank} className="btn btn-solid btn-sm disabled:opacity-40">
+          <button type="button" onClick={onSubmit} disabled={blank} className="btn btn-solid btn-sm ml-auto disabled:opacity-40">
             {submitLabel}
           </button>
         </div>
@@ -196,8 +215,9 @@ export default function Composer({
         role="dialog"
         aria-modal="true"
         aria-label="Odak modu"
-        className="fixed inset-0 z-50 flex flex-col bg-[var(--bg)]"
+        className="fixed inset-x-0 top-0 z-50 flex h-dvh flex-col bg-[var(--bg)]"
         style={{
+          ...(vv ? { height: vv.h + "px", transform: "translateY(" + vv.top + "px)" } : null),
           paddingTop: "max(20px, env(safe-area-inset-top, 0px))",
           paddingBottom: "max(20px, env(safe-area-inset-bottom, 0px))",
           paddingLeft: "max(20px, env(safe-area-inset-left, 0px))",
