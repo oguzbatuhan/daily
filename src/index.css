@@ -280,6 +280,30 @@
     line-height: 1.7;
     min-height: 7.5rem;
   }
+  /* Auto-growing textarea: a hidden copy of the text in the same grid cell sets the height */
+  .grow-wrap {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr); /* a very long word must not widen the column */
+  }
+  .grow-wrap::after {
+    content: attr(data-value);
+    grid-area: 1 / 1 / 2 / 2;
+    visibility: hidden;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    pointer-events: none;
+    font-size: 1rem;
+    line-height: 1.7;
+    min-height: 7.5rem;
+  }
+  .grow-wrap > .grow-input {
+    grid-area: 1 / 1 / 2 / 2;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    overflow: hidden;
+    min-height: 0;
+    height: 100%;
+  }
   .title-input::placeholder,
   .body-input::placeholder {
     color: var(--muted);

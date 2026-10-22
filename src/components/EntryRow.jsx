@@ -7,7 +7,9 @@ export function GroupHead({ primary, secondary, total }) {
   return (
     <h2 className="flex items-baseline gap-2 border-b border-[var(--line-strong)] pb-2 text-sm">
       <span className="font-medium">{primary}</span>
-      {secondary ? <span className="text-[var(--muted)]">{secondary}</span> : null}
+      {secondary ? (
+        <span className="text-[var(--muted)]">{secondary}</span>
+      ) : null}
       <span className="flex-1" aria-hidden="true"></span>
       <span className="tabular font-medium">{total}</span>
     </h2>
@@ -23,7 +25,11 @@ export function DayToggle({ count, open, onToggle }) {
       aria-expanded={open}
       className="mt-1 flex min-h-11 w-full items-center gap-1.5 rounded-lg text-xs font-medium text-[var(--muted)] hover:text-[var(--fg)]"
     >
-      <span className={"inline-flex transition-transform " + (open ? "" : "-rotate-90")}>
+      <span
+        className={
+          "inline-flex transition-transform " + (open ? "" : "-rotate-90")
+        }
+      >
         <ChevronIcon dir="down" />
       </span>
       Yazılar
@@ -33,11 +39,22 @@ export function DayToggle({ count, open, onToggle }) {
 }
 
 const CONFIRM_MS = 5000;
-const timeText = (ms) => new Date(ms).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+const timeText = (ms) =>
+  new Date(ms).toLocaleTimeString("tr-TR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
 // A saved entry: tap to read it in full; edit and delete live in the opened view.
 // reveal: play the soft fade-in (rows of past days that were just opened)
-export function EntryRow({ entry, onEdit, onRemove, onTag, reveal = false, forceOpen = false }) {
+export function EntryRow({
+  entry,
+  onEdit,
+  onRemove,
+  onTag,
+  reveal = false,
+  forceOpen = false,
+}) {
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const cancelRef = useRef(null);
@@ -72,36 +89,58 @@ export function EntryRow({ entry, onEdit, onRemove, onTag, reveal = false, force
         aria-expanded={expanded}
         className="-mx-2 flex min-h-[3.25rem] w-[calc(100%+1rem)] items-start gap-3 rounded-xl px-2 py-3 text-left transition-colors hover:bg-[var(--hover)]"
       >
-        <span className="tabular mt-0.5 w-11 shrink-0 text-sm text-[var(--muted)]">{timeText(entry.createdAt)}</span>
-        <span className="min-w-0 flex-1">
+        <span className="min-w-0 w-full">
           <span className="flex items-center gap-2">
             {entry.title ? (
-              <span className="min-w-0 truncate font-medium">{entry.title}</span>
+              <span className="min-w-0 truncate font-medium">
+                {entry.title}
+              </span>
             ) : (
-              <span className={"min-w-0 " + (expanded ? "sr-only" : "truncate")}>{firstLine || "Boş yazı"}</span>
+              <span
+                className={"min-w-0 " + (expanded ? "sr-only" : "truncate")}
+              >
+                {firstLine || "Boş yazı"}
+              </span>
             )}
             {mood ? (
-              <span className="shrink-0 text-base leading-none" title={mood.label} aria-label={mood.label}>
+              <span
+                className="shrink-0 text-base leading-none"
+                title={mood.label}
+                aria-label={mood.label}
+              >
                 {mood.emoji}
               </span>
             ) : null}
           </span>
           {!expanded && entry.title && firstLine ? (
-            <span className="mt-0.5 block truncate text-sm text-[var(--muted)]">{firstLine}</span>
+            <span className="mt-0.5 block truncate text-sm text-[var(--muted)]">
+              {firstLine}
+            </span>
           ) : null}
-          {!expanded && !entry.title && entry.body.trim().length > firstLine.length ? (
-            <span className="mt-0.5 block text-xs text-[var(--muted)]">{wordCount(entry.body)} kelime</span>
+          {!expanded &&
+          !entry.title &&
+          entry.body.trim().length > firstLine.length ? (
+            <span className="mt-0.5 block text-xs text-[var(--muted)]">
+              {wordCount(entry.body)} kelime
+            </span>
           ) : null}
         </span>
       </button>
 
       {expanded ? (
-        <div className="task-in ml-14 pb-2">
-          <p className="whitespace-pre-wrap break-words text-[0.9375rem] leading-7">{entry.body}</p>
+        <div className="task-in pb-2">
+          <p className="whitespace-pre-wrap break-words text-[0.9375rem] leading-7">
+            {entry.body}
+          </p>
           {entry.tags.length ? (
             <div className="mt-3 flex flex-wrap gap-1.5">
               {entry.tags.map((t) => (
-                <button key={t} type="button" className="tag-chip" onClick={() => onTag(t)}>
+                <button
+                  key={t}
+                  type="button"
+                  className="tag-chip"
+                  onClick={() => onTag(t)}
+                >
                   #{t}
                 </button>
               ))}
@@ -110,21 +149,38 @@ export function EntryRow({ entry, onEdit, onRemove, onTag, reveal = false, force
 
           <div className="mt-3 flex min-h-[2.5rem] items-center gap-2">
             {confirming ? (
-              <div role="alertdialog" aria-label="Silme onayı" className="flex w-full items-center gap-2">
+              <div
+                role="alertdialog"
+                aria-label="Silme onayı"
+                className="flex w-full items-center gap-2"
+              >
                 <span className="min-w-0 flex-1 text-sm">Silinsin mi?</span>
-                <button ref={cancelRef} type="button" onClick={() => setConfirming(false)} className="btn btn-ghost btn-sm">
+                <button
+                  ref={cancelRef}
+                  type="button"
+                  onClick={() => setConfirming(false)}
+                  className="btn btn-ghost btn-sm"
+                >
                   Vazgeç
                 </button>
-                <button type="button" onClick={() => onRemove(entry.id)} className="btn btn-warn btn-sm">
+                <button
+                  type="button"
+                  onClick={() => onRemove(entry.id)}
+                  className="btn btn-warn btn-sm"
+                >
                   Sil
                 </button>
               </div>
             ) : (
               <>
                 <span className="tabular min-w-0 flex-1 text-xs text-[var(--muted)]">
-                  {wordCount(entry.body)} kelime
+                  {wordCount(entry.body)} kelime · {timeText(entry.createdAt)}
                 </span>
-                <button type="button" onClick={() => onEdit(entry.id)} className="btn btn-ghost btn-sm gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => onEdit(entry.id)}
+                  className="btn btn-ghost btn-sm gap-1.5"
+                >
                   <EditIcon />
                   Düzenle
                 </button>

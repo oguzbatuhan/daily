@@ -113,14 +113,6 @@ export default function Composer({
   const blank = isBlank(value);
   const words = wordCount(value.body);
 
-  // Grow with the text (inline mode only; focus mode fills the screen and scrolls)
-  useEffect(() => {
-    const el = area.current;
-    if (!el || big) return;
-    el.style.height = "auto";
-    el.style.height = Math.max(el.scrollHeight, 120) + "px";
-  }, [value.body, big]);
-
   useEffect(() => {
     if (autoFocus && area.current) {
       area.current.focus({ preventScroll: false });
@@ -180,16 +172,20 @@ export default function Composer({
           </button>
         ) : null}
       </div>
-      <textarea
-        ref={area}
-        className={"body-input mt-2 " + (big ? "flex-1" : "")}
-        value={value.body}
-        onChange={(e) => set({ body: e.target.value })}
-        onKeyDown={onKeyDown}
-        placeholder={placeholder}
-        aria-label="Yazı"
-        enterKeyHint="enter"
-      />
+      {/* Inline mode: the box grows through a hidden mirror of the text (CSS only), so the height is never reset
+          from script. Resetting it made the page jump on phones and pushed the caret off screen. */}
+      <div className={big ? "mt-2 flex flex-1 flex-col" : "grow-wrap mt-2"} data-value={big ? undefined : value.body + " "}>
+        <textarea
+          ref={area}
+          className={"body-input " + (big ? "flex-1" : "grow-input")}
+          value={value.body}
+          onChange={(e) => set({ body: e.target.value })}
+          onKeyDown={onKeyDown}
+          placeholder={placeholder}
+          aria-label="Yazı"
+          enterKeyHint="enter"
+        />
+      </div>
       <div className="mt-3 flex flex-col gap-3 border-t border-[var(--line)] pt-3">
         <TagEditor tags={value.tags} onChange={(tags) => set({ tags })} suggestions={suggestions} />
         <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
