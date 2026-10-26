@@ -1,16 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AuthError,
+  cloudConfigured,
   downloadData,
-  driveConfigured,
-  loadGoogleScript,
+  onAuthChange,
+  requireUser,
   signIn,
   signOut,
   uploadData,
-} from "../lib/drive.js";
+} from "../lib/supabase.js";
 import { mergeEntries, normalizeEntries, sameEntries, sortById } from "../lib/entries.js";
 
-const FLAG_KEY = "daily-drive-connected";
+const FLAG_KEY = "daily-cloud-connected";
 const DEBOUNCE_MS = 1200;
 const FOCUS_SYNC_MS = 15000;
 
@@ -29,12 +30,13 @@ const writeFlag = (on) => {
 };
 
 // status: "off" | "syncing" | "synced" | "needs-auth" | "error"
-export function useDriveSync(entries, setEntries) {
-  const initiallyConnected = driveConfigured && readFlag();
+export function useCloudSync(entries, setEntries) {
+  const initiallyConnected = cloudConfigured && readFlag();
   const [connected, setConnected] = useState(initiallyConnected);
   const [status, setStatus] = useState(initiallyConnected ? "syncing" : "off");
   const [lastSynced, setLastSynced] = useState(null);
   const [error, setError] = useState("");
+  const [email, setEmail] = useState("");
 
   const entriesRef = useRef(entries);
   entriesRef.current = entries;
@@ -55,6 +57,8 @@ export function useDriveSync(entries, setEntries) {
     lastRun.current = Date.now();
     setStatus("syncing");
     try {
+      const user = await requireUser();
+      setEmail(user.email || "");
       const remote = await downloadData();
       const remoteEntries = normalizeEntries(remote?.entries);
       const local = entriesRef.current;
@@ -100,16 +104,26 @@ export function useDriveSync(entries, setEntries) {
     return () => clearTimeout(id);
   }, [entries, run]);
 
-  // On startup: preload the Google script and sync silently if previously connected
+  // On startup (also right after returning from the Google sign-in page): sync if previously connected.
+  // Supabase finishes the sign-in code exchange inside getSession(), so run() simply waits for it.
   useEffect(() => {
-    if (!driveConfigured) return;
-    loadGoogleScript().catch(() => {});
+    if (!cloudConfigured) return;
     if (connectedRef.current) run();
   }, [run]);
 
+  // If the session is lost (signed out elsewhere, refresh token revoked) ask to reconnect
+  useEffect(() => {
+    if (!cloudConfigured) return;
+    return onAuthChange((event) => {
+      if (event === "SIGNED_OUT" && connectedRef.current) {
+        setStatus("needs-auth");
+      }
+    });
+  }, []);
+
   // Pull changes from other devices when returning to the tab
   useEffect(() => {
-    if (!driveConfigured) return;
+    if (!cloudConfigured) return;
     const onVisible = () => {
       if (
         document.visibilityState === "visible" &&
@@ -131,52 +145,37 @@ export function useDriveSync(entries, setEntries) {
     };
   }, [run]);
 
+  // Redirects to Google. The flag is written first so the app syncs automatically when it comes back.
   const connect = useCallback(async () => {
     setError("");
     setStatus("syncing");
+    writeFlag(true);
     try {
       await signIn();
-      connectedRef.current = true;
-      writeFlag(true);
-      setConnected(true);
-      await run();
     } catch (e) {
-      if (e instanceof AuthError) {
-        if (e.message === "popup_failed_to_open") {
-          setError("Giriş penceresi açılamadı. Tarayıcının açılır pencere engelini kapat.");
-        }
-        setStatus(connectedRef.current ? "needs-auth" : "off");
-      } else {
-        setStatus("error");
-        setError(e.message || "Bilinmeyen hata");
-      }
+      writeFlag(connectedRef.current);
+      setStatus(connectedRef.current ? "needs-auth" : "off");
+      setError(e.message || "Giriş başlatılamadı");
     }
-  }, [run]);
+  }, []);
 
-  // If silent renewal fails (e.g. the browser cleared cookies), open the sign-in popup on the first tap;
-  // the account and consent are remembered, so the popup usually closes by itself.
-  useEffect(() => {
-    if (status !== "needs-auth" || !connectedRef.current) return;
-    const onTap = () => connect();
-    window.addEventListener("pointerdown", onTap, { once: true });
-    return () => window.removeEventListener("pointerdown", onTap);
-  }, [status, connect]);
-
-  const disconnect = useCallback(() => {
-    signOut();
-    writeFlag(false);
+  const disconnect = useCallback(async () => {
     connectedRef.current = false;
+    writeFlag(false);
     setConnected(false);
     setStatus("off");
     setError("");
+    setEmail("");
+    await signOut();
   }, []);
 
   return {
-    configured: driveConfigured,
+    configured: cloudConfigured,
     connected,
     status,
     lastSynced,
     error,
+    email,
     connect,
     disconnect,
     syncNow: run,

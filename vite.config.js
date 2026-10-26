@@ -19,7 +19,7 @@ export default defineConfig({
         id: base,
         name: "Günlük",
         short_name: "Günlük",
-        description: "Sade, hızlı günlük defteri. Çevrimdışı çalışır, yedeklenir, Google Drive ile eşitlenir.",
+        description: "Sade, hızlı günlük defteri. Çevrimdışı çalışır, yedeklenir, Google ile giriş yapıp Supabase'e yedeklenir.",
         lang: "tr",
         start_url: base,
         scope: base,

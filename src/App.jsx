@@ -4,7 +4,7 @@ import Composer from "./components/Composer.jsx";
 import { DayToggle, EntryRow, GroupHead } from "./components/EntryRow.jsx";
 import { FlameIcon, FreezeIcon, SearchIcon } from "./components/Icons.jsx";
 import SyncBar from "./components/SyncBar.jsx";
-import { useDriveSync } from "./hooks/useDriveSync.js";
+import { useCloudSync } from "./hooks/useCloudSync.js";
 import { groupLabel, longLabel, shiftIso, toIso, weekStartIso } from "./lib/dates.js";
 import {
   DRAFT_KEY,
@@ -61,7 +61,7 @@ export default function App() {
   const [lastBackup, setLastBackup] = useState(readBackupTime);
   const [nudgeHidden, setNudgeHidden] = useState(false);
   const [wantsNew] = useState(() => new URLSearchParams(window.location.search).get("new") === "1");
-  const sync = useDriveSync(entries, setEntries);
+  const sync = useCloudSync(entries, setEntries);
   const noticeTimer = useRef(null);
 
   const say = useCallback((msg) => {
@@ -70,7 +70,7 @@ export default function App() {
     noticeTimer.current = setTimeout(() => setNotice(""), 3500);
   }, []);
 
-  // Local copy: entries are kept in this browser even when not connected to Drive
+  // Local copy: entries are kept in this browser even when not connected to the cloud backup
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
@@ -256,7 +256,7 @@ export default function App() {
         >
           <span className="min-w-0 flex-1">
             Yazıların yalnızca bu cihazda. Üstteki kalkan simgesinden yedek al
-            {sync.configured ? " ya da Drive’a bağlan." : "."}
+            {sync.configured ? " ya da Google ile bağlan." : "."}
           </span>
           <button type="button" className="link-btn shrink-0 !px-3 !py-2" onClick={() => setNudgeHidden(true)}>
             Sonra

@@ -1,6 +1,6 @@
 # Günlük
 
-React + Tailwind CSS ile yapılmış sade günlük defteri. Flow (Akış) uygulamasının tasarım dili, renk jetonları, Drive yedekleme mantığı ve PWA ayarları birebir alındı. Veriler tarayıcıda saklanır, istersen Google Drive ile cihazlar arasında eşitlenir. Telefona uygulama gibi kurulur.
+React + Tailwind CSS ile yapılmış sade günlük defteri. Flow (Akış) uygulamasının tasarım dili, renk jetonları, bulut yedekleme mantığı ve PWA ayarları birebir alındı. Veriler tarayıcıda saklanır, istersen Google ile giriş yapıp Supabase'e yedeklenir ve cihazlar arasında eşitlenir. Telefona uygulama gibi kurulur.
 
 ## Özellikler
 
@@ -11,7 +11,7 @@ React + Tailwind CSS ile yapılmış sade günlük defteri. Flow (Akış) uygula
 - **Ara ve süz.** Başlık, metin ve etiketlerde arama; sık kullanılan etiketlerle tek dokunuşla süzme.
 - **Seri ve seri koruması.** Üst üste yazdığın gün sayısı. Her hafta (pazartesi-pazar) 2 koruma hakkın var: yazmadığın bir günde otomatik kullanılır ve seri bozulmaz, her pazartesi yenilenir, biriktirilmez. Hakkın bittiyse yazılmayan gün seriyi sıfırlar. Korunan gün sayıya eklenmez. Hesap yazılarından çıkarıldığı için cihazlar arasında hep aynıdır.
 - **Yedekleme.** Üstteki kalkan simgesi: `.json` yedek indir, yedekten geri yükle (mevcut yazıların üzerine yazmaz, birleştirir), okunur `.txt` olarak indir. 14 günden uzun süredir yedek alınmadıysa nazik bir hatırlatma çıkar.
-- **Drive eşitleme.** Flow ile aynı yöntem: yazılar Drive'daki gizli uygulama klasörüne `daily.json` olarak yazılır. Aynı yazı iki yerde değişirse son değişiklik kazanır; silmeler diğer cihaza da ulaşır (30 gün silme izi).
+- **Bulut eşitleme.** Google ile giriş yap; yazılar Supabase'deki ortak `app_backups` tablosuna `app = daily` satırı olarak yazılır. Aynı yazı iki yerde değişirse son değişiklik kazanır; silmeler diğer cihaza da ulaşır (30 gün silme izi).
 - **Çevrimdışı çalışır.** Service worker ile; ana ekrana ekleyince uygulama gibi açılır. Simgeye uzun basınca "Yeni yazı" kısayolu çıkar.
 - Açık ve koyu tema otomatik, yazı tipi Geist uygulamayla birlikte gelir.
 
@@ -19,18 +19,29 @@ React + Tailwind CSS ile yapılmış sade günlük defteri. Flow (Akış) uygula
 
 ```bash
 npm install
-cp .env.example .env.local   # Drive eşitlemesi için istemci kimliğini yaz (Flow'dakiyle aynı olabilir)
+cp .env.example .env.local   # Supabase URL ve anon anahtarını yaz (üç uygulamada aynı)
 npm run dev                  # http://localhost:5173
 npm test                     # mantık testleri
 ```
 
-İstemci kimliği olmadan da çalışır; Drive eşitleme kapalı kalır, JSON yedek yine kullanılabilir.
+Supabase anahtarları olmadan da çalışır; bulut yedekleme kapalı kalır, JSON yedek yine kullanılabilir.
+
+## Supabase yedekleme kurulumu (bir kez, üç uygulama için ortak)
+
+Günlük, Akış ve Görevler **aynı Supabase projesini ve aynı tek tabloyu** (`app_backups`) kullanır. Her uygulama tabloda kendi satırına yazar (`app` sütunu: `daily`, `flow`, `task`), bu yüzden veriler karışmaz. Her kullanıcı yalnızca kendi satırlarını görür (RLS).
+
+1. **Tablo:** Supabase → SQL Editor'a `supabase/setup.sql` dosyasının içeriğini yapıştırıp çalıştır (tekrar çalıştırmak güvenli).
+2. **Google girişi:** Supabase → Authentication → Providers → **Google**'ı aç, Google Cloud'daki OAuth istemcisinin Client ID ve Client Secret değerlerini yaz. Google Cloud'da bu istemcinin **Authorized redirect URIs** listesine Supabase'in gösterdiği `https://<proje>.supabase.co/auth/v1/callback` adresini ekle.
+3. **Yönlendirme adresleri:** Supabase → Authentication → URL Configuration → **Redirect URLs** listesine üç uygulamanın adreslerini ekle (sonda `/` olacak), yerel geliştirme için de `http://localhost:5173/`. Örnek: `https://oguzbatuhan.github.io/daily/`, `https://oguzbatuhan.github.io/flow/`, `https://oguzbatuhan.github.io/task/`.
+4. **Anahtarlar:** Supabase → Project Settings → API'den `Project URL` ve `anon public` anahtarını al. Yerelde `.env.local` içine, yayında deponun **Settings → Secrets and variables → Actions → Variables** bölümüne `VITE_SUPABASE_URL` ve `VITE_SUPABASE_ANON_KEY` olarak ekle. Anahtar herkese açık olacak şekilde tasarlanmıştır; veriyi RLS korur. `service_role` anahtarını **asla** kullanma.
+
+Tabloyu başka bir adla açtıysan `VITE_SUPABASE_TABLE` ile adını ver.
 
 ## Yayınlama (GitHub Pages)
 
 1. Yeni bir depo aç (ör. `daily`) ve bu klasörün içeriğini `main` dalına yükle.
 2. **Settings → Pages → Source** kısmını **GitHub Actions** yap.
-3. **Settings → Secrets and variables → Actions → Variables** bölümüne `VITE_GOOGLE_CLIENT_ID` ekle.
+3. **Settings → Secrets and variables → Actions → Variables** bölümüne `VITE_SUPABASE_URL` ve `VITE_SUPABASE_ANON_KEY` ekle.
 4. Site `https://<kullanıcı>.github.io/daily/` adresinde yayınlanır. Telefonda Chrome'da "Ana ekrana ekle", iPhone'da Safari'de Paylaş → "Ana Ekrana Ekle".
 
 ## Simgeler
