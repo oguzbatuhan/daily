@@ -7,8 +7,9 @@ React + Tailwind CSS ile yapılmış sade günlük defteri. Flow (Akış) uygula
 - **Yaz ve kaydet.** Başlık (isteğe bağlı), serbest metin, ruh hali (5 seviye) ve en fazla 5 etiket. `Ctrl/Cmd + Enter` ile kaydedilir.
 - **Taslak kaybolmaz.** Yarım kalan yazı sayfa yenilense ya da uygulama kapansa da yerinde durur.
 - **Odak modu.** Tam ekran, dikkat dağıtmayan yazı alanı. `Esc` ile çıkılır.
-- **Günlere göre liste.** Bugün her zaman açık, geçmiş günler kapalı başlar. Yazıya dokununca tamamı açılır; düzenle ve sil (onaylı) orada.
-- **Ara ve süz.** Başlık, metin ve etiketlerde arama; sık kullanılan etiketlerle tek dokunuşla süzme.
+- **Günlere göre liste.** Ana ekranda yalnızca bugünün yazıları görünür. Yazıya dokununca tamamı açılır; düzenle ve sil (onaylı) orada.
+- **Geçmiş çekmecesi.** Geçmiş günler küçük **Geçmiş** düğmesinin arkasında gizlidir (telefonda alttan açılan sayfa, geniş ekranda sağ panel). Günler en yeniden en eskiye, aylara ayrılmış sıralanır; yalnızca en yeni gün açık başlar. 30 günden eskisi için "Daha eski günler" düğmesi vardır. `Esc`, ✕ ya da dışına dokunmak kapatır.
+- **Ara ve süz.** Geçmiş çekmecesinin içinde: başlık, metin ve etiketlerde arama (bugün dahil tüm günlerde); sık kullanılan etiketlerle tek dokunuşla süzme. Bugünkü bir yazının etiketine dokunmak çekmeceyi o etiketle süzülmüş açar.
 - **Seri ve seri koruması.** Üst üste yazdığın gün sayısı. Her hafta (pazartesi-pazar) 2 koruma hakkın var: yazmadığın bir günde otomatik kullanılır ve seri bozulmaz, her pazartesi yenilenir, biriktirilmez. Hakkın bittiyse yazılmayan gün seriyi sıfırlar. Korunan gün sayıya eklenmez. Hesap yazılarından çıkarıldığı için cihazlar arasında hep aynıdır.
 - **Yedekleme.** Üstteki kalkan simgesi: `.json` yedek indir, yedekten geri yükle (mevcut yazıların üzerine yazmaz, birleştirir), okunur `.txt` olarak indir. 14 günden uzun süredir yedek alınmadıysa nazik bir hatırlatma çıkar.
 - **Bulut eşitleme.** Google ile giriş yap; yazılar Supabase'deki ortak `app_backups` tablosuna `app = daily` satırı olarak yazılır. Aynı yazı iki yerde değişirse son değişiklik kazanır; silmeler diğer cihaza da ulaşır (30 gün silme izi).

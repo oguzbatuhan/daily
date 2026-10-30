@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { shiftIso, toIso, weekStartIso } from "../src/lib/dates.js";
+import { groupByMonth, monthKey, monthLabel } from "../src/lib/history.js";
 import {
   TAGS_PER_ENTRY,
   buildBackup,
@@ -199,4 +200,30 @@ test("text export is newest day first", () => {
   assert.ok(text.indexOf("2026-10-20") < text.indexOf("2026-10-19"));
   assert.match(text, /#x/);
   assert.match(text, /Çok iyi/);
+});
+
+test("history: monthKey and monthLabel", () => {
+  assert.equal(monthKey("2026-10-18"), "2026-10");
+  // Same year as today: month name only; any other year: name and year
+  assert.equal(monthLabel("2026-10", "2026-10-30"), "Ekim");
+  assert.equal(monthLabel("2025-12", "2026-10-30"), "Aralık 2025");
+});
+
+test("history: groupByMonth keeps newest-first order and splits by month", () => {
+  const days = [
+    { date: "2026-10-29" },
+    { date: "2026-10-02" },
+    { date: "2026-09-30" },
+    { date: "2025-12-31" },
+  ];
+  const groups = groupByMonth(days, "2026-10-30");
+  assert.deepEqual(
+    groups.map((g) => [g.key, g.label, g.days.map((d) => d.date)]),
+    [
+      ["2026-10", "Ekim", ["2026-10-29", "2026-10-02"]],
+      ["2026-09", "Eylül", ["2026-09-30"]],
+      ["2025-12", "Aralık 2025", ["2025-12-31"]],
+    ]
+  );
+  assert.deepEqual(groupByMonth([], "2026-10-30"), []);
 });

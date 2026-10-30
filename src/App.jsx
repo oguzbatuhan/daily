@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import BackupMenu from "./components/BackupMenu.jsx";
 import Composer from "./components/Composer.jsx";
-import { DayToggle, EntryRow, GroupHead } from "./components/EntryRow.jsx";
+import { EntryRow, GroupHead } from "./components/EntryRow.jsx";
+import { HistoryButton, HistoryDay, HistorySheet, MonthHead } from "./components/History.jsx";
 import { FlameIcon, FreezeIcon, SearchIcon } from "./components/Icons.jsx";
 import SyncBar from "./components/SyncBar.jsx";
 import { useCloudSync } from "./hooks/useCloudSync.js";
 import { groupLabel, longLabel, shiftIso, toIso, weekStartIso } from "./lib/dates.js";
+import { groupByMonth } from "./lib/history.js";
 import {
   DRAFT_KEY,
   STORAGE_KEY,
@@ -25,7 +27,7 @@ import {
   topTags,
 } from "./lib/entries.js";
 
-const FIRST_PAGE_DAYS = 14;
+const HISTORY_PAGE_DAYS = 30;
 const BACKUP_KEY = "daily-last-backup";
 const NUDGE_AFTER_MS = 14 * 24 * 60 * 60 * 1000;
 
@@ -56,7 +58,8 @@ export default function App() {
   const [focus, setFocus] = useState(false);
   const [query, setQuery] = useState("");
   const [tag, setTag] = useState("");
-  const [dayLimit, setDayLimit] = useState(FIRST_PAGE_DAYS);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyLimit, setHistoryLimit] = useState(HISTORY_PAGE_DAYS);
   const [notice, setNotice] = useState("");
   const [lastBackup, setLastBackup] = useState(readBackupTime);
   const [nudgeHidden, setNudgeHidden] = useState(false);
@@ -108,25 +111,60 @@ export default function App() {
   const live = useMemo(() => entries.filter((e) => !e.deleted), [entries]);
   const suggestions = useMemo(() => topTags(entries, 6), [entries]);
   const filtered = useMemo(() => filterEntries(entries, query, tag), [entries, query, tag]);
-  const groups = useMemo(() => {
-    const g = groupByDay(filtered, searching ? null : today);
-    return g;
-  }, [filtered, today, searching]);
-  const todayCount = useMemo(() => live.filter((e) => e.date === today).length, [live, today]);
+  // Today stays on the main screen; every other day lives behind the history button.
+  // While searching, the results cover all days (today included).
+  const todayItems = useMemo(
+    () => live.filter((e) => e.date === today).sort((a, b) => b.createdAt - a.createdAt),
+    [live, today]
+  );
+  const pastDays = useMemo(() => groupByDay(live, null).filter((g) => g.date !== today), [live, today]);
+  const groups = useMemo(
+    () => groupByDay(filtered, null).filter((g) => searching || g.date !== today),
+    [filtered, today, searching]
+  );
+  const todayCount = todayItems.length;
+  const todayLabel = groupLabel(today, today);
   const { count: days, left: freezesLeft } = useMemo(
     () => streakInfo(entries, today, shiftIso, weekStartIso),
     [entries, today]
   );
-  const shown = groups.slice(0, dayLimit);
 
-  // Past days start closed; today is always open (and everything is open while searching)
+  // In the history drawer only the newest day starts open. While searching, every result day is open
+  // unless the user folds it ("collapsed").
   const [openDays, setOpenDays] = useState(() => new Set());
-  const toggleDay = (date) =>
-    setOpenDays((prev) => {
+  const [collapsed, setCollapsed] = useState(() => new Set());
+  useEffect(() => setCollapsed(new Set()), [query, tag]);
+  const flip = (set) => (date) =>
+    set((prev) => {
       const next = new Set(prev);
       next.has(date) ? next.delete(date) : next.add(date);
       return next;
     });
+  const dayOpen = (date) => (searching ? !collapsed.has(date) : openDays.has(date));
+  const toggleDay = (date) => (searching ? flip(setCollapsed)(date) : flip(setOpenDays)(date));
+
+  // Opening starts fresh (newest day open, first page); an optional tag opens it already filtered
+  const openHistory = (withTag) => {
+    setOpenDays(new Set(pastDays.length ? [pastDays[0].date] : []));
+    setHistoryLimit(HISTORY_PAGE_DAYS);
+    if (typeof withTag === "string") setTag(withTag);
+    setHistoryOpen(true);
+  };
+  const closeHistory = () => {
+    setHistoryOpen(false);
+    setQuery("");
+    setTag("");
+    setEditing(null);
+  };
+  // Nothing left to show (e.g. the last past entry was deleted): close the drawer
+  useEffect(() => {
+    if (historyOpen && live.length === 0) setHistoryOpen(false);
+  }, [historyOpen, live.length]);
+
+  const months = useMemo(
+    () => (historyOpen ? groupByMonth(groups.slice(0, historyLimit), today) : []),
+    [historyOpen, groups, historyLimit, today]
+  );
 
   const saveDraft = () => {
     if (isBlank(draft)) return;
@@ -193,6 +231,24 @@ export default function App() {
       say(e.message || "Yedek yüklenemedi");
     }
   };
+
+  // One entry: its row, or the inline editor while it is being edited (same in the main list and the drawer)
+  const renderEntry = (e, onTag) =>
+    editing && editing.id === e.id ? (
+      <li key={e.id} className="py-3">
+        <Composer
+          autoFocus
+          value={editing.value}
+          onChange={(value) => setEditing({ id: e.id, value })}
+          onSubmit={saveEdit}
+          onCancel={() => setEditing(null)}
+          suggestions={suggestions}
+          submitLabel="Güncelle"
+        />
+      </li>
+    ) : (
+      <EntryRow key={e.id} entry={e} onEdit={startEdit} onRemove={remove} onTag={onTag} />
+    );
 
   const showNudge =
     !sync.connected && !nudgeHidden && live.length >= 3 && (!lastBackup || Date.now() - lastBackup > NUDGE_AFTER_MS);
@@ -287,106 +343,111 @@ export default function App() {
         />
       ) : null}
 
-      {hasAny ? (
-        <div className="mt-7 flex flex-col gap-3">
-          <label className="search-field">
-            <SearchIcon />
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Yazılarda ara"
-              aria-label="Yazılarda ara"
-              autoComplete="off"
-              enterKeyHint="search"
-            />
-            {query ? (
-              <button type="button" onClick={() => setQuery("")} aria-label="Aramayı temizle" className="tag-clear">
-                ×
-              </button>
-            ) : null}
-          </label>
-          {suggestions.length ? (
-            <div className="flex flex-wrap gap-1.5">
-              {suggestions.map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  className="tag-chip quiet"
-                  aria-pressed={tag.toLocaleLowerCase("tr-TR") === t.toLocaleLowerCase("tr-TR")}
-                  onClick={() => setTag((cur) => (cur.toLocaleLowerCase("tr-TR") === t.toLocaleLowerCase("tr-TR") ? "" : t))}
-                >
-                  #{t}
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-
       {!hasAny ? (
         <p className="py-8 text-center text-sm text-[var(--muted)]">
           Henüz yazı yok. Yazdıkların bugünün altına eklenir, bu cihazda saklanır.
         </p>
-      ) : searching && groups.length === 0 ? (
-        <p className="py-8 text-center text-sm text-[var(--muted)]">Eşleşen yazı bulunamadı.</p>
       ) : (
-        <div className="mt-8 flex flex-col gap-9">
-          {shown.map((g) => {
-            const label = groupLabel(g.date, today);
-            const isToday = g.date === today;
-            const open = isToday || searching || openDays.has(g.date);
-            return (
-              <section key={g.date}>
-                <GroupHead primary={label.primary} secondary={label.secondary} total={g.items.length + " yazı"} />
-                {!isToday && !searching && g.items.length > 0 ? (
-                  <DayToggle count={g.items.length} open={open} onToggle={() => toggleDay(g.date)} />
-                ) : null}
-                {g.items.length === 0 ? (
-                  <p className="py-3 text-sm text-[var(--muted)]">Bugün henüz yazı yok.</p>
-                ) : open ? (
-                  <ul>
-                    {g.items.map((e) =>
-                      editing && editing.id === e.id ? (
-                        <li key={e.id} className="py-3">
-                          <Composer
-                            autoFocus
-                            value={editing.value}
-                            onChange={(value) => setEditing({ id: e.id, value })}
-                            onSubmit={saveEdit}
-                            onCancel={() => setEditing(null)}
-                            suggestions={suggestions}
-                            submitLabel="Güncelle"
-                          />
-                        </li>
-                      ) : (
-                        <EntryRow
-                          key={e.id}
-                          entry={e}
-                          onEdit={startEdit}
-                          onRemove={remove}
-                          onTag={(t) => {
-                            setTag(t);
-                            window.scrollTo({ top: 0, behavior: "smooth" });
-                          }}
-                          reveal={!isToday}
-                        />
-                      )
-                    )}
-                  </ul>
-                ) : null}
-              </section>
-            );
-          })}
-          {groups.length > dayLimit ? (
-            <div className="flex justify-center">
-              <button type="button" onClick={() => setDayLimit((n) => n + FIRST_PAGE_DAYS)} className="btn btn-ghost">
-                Daha eski günler
-              </button>
+        <div className="mt-8">
+          <section>
+            <GroupHead primary={todayLabel.primary} secondary={todayLabel.secondary} total={todayItems.length + " yazı"} />
+            {todayItems.length === 0 ? (
+              <p className="py-3 text-sm text-[var(--muted)]">Bugün henüz yazı yok.</p>
+            ) : (
+              <ul>{todayItems.map((e) => renderEntry(e, openHistory))}</ul>
+            )}
+          </section>
+          {pastDays.length > 0 ? (
+            <div className="mt-6 flex justify-center">
+              <HistoryButton count={pastDays.length} onClick={() => openHistory()} />
             </div>
           ) : null}
         </div>
       )}
+
+      {historyOpen ? (
+        <HistorySheet
+          summary={
+            searching
+              ? groups.reduce((n, g) => n + g.items.length, 0) + " yazı bulundu"
+              : pastDays.length + " gün · " + pastDays.reduce((n, g) => n + g.items.length, 0) + " yazı"
+          }
+          onClose={closeHistory}
+          toolbar={
+            <div className="flex flex-col gap-2.5">
+              <label className="search-field">
+                <SearchIcon />
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Yazılarda ara"
+                  aria-label="Yazılarda ara"
+                  autoComplete="off"
+                  enterKeyHint="search"
+                />
+                {query ? (
+                  <button type="button" onClick={() => setQuery("")} aria-label="Aramayı temizle" className="tag-clear">
+                    ×
+                  </button>
+                ) : null}
+              </label>
+              {suggestions.length ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {suggestions.map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      className="tag-chip quiet"
+                      aria-pressed={tag.toLocaleLowerCase("tr-TR") === t.toLocaleLowerCase("tr-TR")}
+                      onClick={() => setTag((cur) => (cur.toLocaleLowerCase("tr-TR") === t.toLocaleLowerCase("tr-TR") ? "" : t))}
+                    >
+                      #{t}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          }
+        >
+          {groups.length === 0 ? (
+            <p className="py-8 text-center text-sm text-[var(--muted)]">
+              {searching ? "Eşleşen yazı bulunamadı." : "Geçmiş günlerde yazı yok."}
+            </p>
+          ) : null}
+          {months.map((m) => (
+            <div key={m.key}>
+              <MonthHead label={m.label} meta={m.days.reduce((n, g) => n + g.items.length, 0) + " yazı"} />
+              {m.days.map((g) => {
+                const label = groupLabel(g.date, today);
+                return (
+                  <HistoryDay
+                    key={g.date}
+                    primary={label.primary}
+                    secondary={label.secondary}
+                    meta={g.items.length + " yazı"}
+                    open={dayOpen(g.date)}
+                    onToggle={() => toggleDay(g.date)}
+                  >
+                    <ul>{g.items.map((e) => renderEntry(e, setTag))}</ul>
+                  </HistoryDay>
+                );
+              })}
+            </div>
+          ))}
+          {groups.length > historyLimit ? (
+            <div className="flex justify-center py-5">
+              <button
+                type="button"
+                onClick={() => setHistoryLimit((n) => n + HISTORY_PAGE_DAYS)}
+                className="btn btn-ghost btn-sm"
+              >
+                Daha eski günler
+              </button>
+            </div>
+          ) : null}
+        </HistorySheet>
+      ) : null}
 
       {notice ? (
         <div className="toast" role="status">

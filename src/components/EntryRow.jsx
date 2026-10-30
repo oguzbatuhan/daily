@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronIcon, EditIcon, TrashIcon } from "./Icons.jsx";
+import { EditIcon, TrashIcon } from "./Icons.jsx";
 import { moodOf, wordCount } from "../lib/entries.js";
 
 // Day heading: the day on the left, that day's entry count on the right
@@ -13,28 +13,6 @@ export function GroupHead({ primary, secondary, total }) {
       <span className="flex-1" aria-hidden="true"></span>
       <span className="tabular font-medium">{total}</span>
     </h2>
-  );
-}
-
-// Open/close button for a past day's entries (today is always open)
-export function DayToggle({ count, open, onToggle }) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      aria-expanded={open}
-      className="mt-1 flex min-h-11 w-full items-center gap-1.5 rounded-lg text-xs font-medium text-[var(--muted)] hover:text-[var(--fg)]"
-    >
-      <span
-        className={
-          "inline-flex transition-transform " + (open ? "" : "-rotate-90")
-        }
-      >
-        <ChevronIcon dir="down" />
-      </span>
-      Yazılar
-      <span className="tabular">{count}</span>
-    </button>
   );
 }
 

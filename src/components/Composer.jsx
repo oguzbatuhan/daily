@@ -127,7 +127,11 @@ export default function Composer({
       e.preventDefault();
       onSubmit();
     }
-    if (e.key === "Escape" && onCancel) onCancel();
+    if (e.key === "Escape" && onCancel) {
+      // Only the editor closes; a history drawer around it must not also close on the same key press
+      e.stopPropagation();
+      onCancel();
+    }
   };
 
   // Focus mode follows the visible area so the on-screen keyboard never covers the save row
