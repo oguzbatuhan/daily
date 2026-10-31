@@ -3,8 +3,8 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 OUT = Path(__file__).resolve().parent.parent / "public"
-BG = (20, 20, 20, 255)  # #141414 dark surface
-FG = (230, 230, 230, 255)  # #e6e6e6
+BG = (23, 23, 23, 255)  # #171717 dark surface
+FG = (240, 240, 240, 255)  # #f0f0f0
 SS = 4  # draw large and downscale for anti-aliasing
 
 
