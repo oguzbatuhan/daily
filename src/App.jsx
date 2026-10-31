@@ -3,7 +3,7 @@ import BackupMenu from "./components/BackupMenu.jsx";
 import Composer from "./components/Composer.jsx";
 import { EntryRow, GroupHead } from "./components/EntryRow.jsx";
 import { HistoryButton, HistoryDay, HistorySheet, MonthHead } from "./components/History.jsx";
-import { FlameIcon, FreezeIcon, SearchIcon } from "./components/Icons.jsx";
+import { FlameIcon, ProtectionIcon, SearchIcon } from "./components/Icons.jsx";
 import SyncBar from "./components/SyncBar.jsx";
 import { useCloudSync } from "./hooks/useCloudSync.js";
 import { groupLabel, longLabel, shiftIso, toIso, weekStartIso } from "./lib/dates.js";
@@ -287,49 +287,40 @@ export default function App() {
           </span>
           {days > 0 ? (
             <span
-              className="tabular inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--line-strong)] bg-[var(--surface)] px-3 text-xs font-medium text-[var(--fg)]"
-              title="Üst üste yazılan gün sayısı"
-            >
-              <span className="text-[var(--accent)] [&>svg]:block">
-                <FlameIcon />
-              </span>
-              <span>{days} gün seri</span>
-            </span>
-          ) : (
-            <span className="tabular inline-flex h-8 items-center rounded-full border border-[var(--line)] px-3 text-xs text-[var(--muted)]">
-              Seri yok
-            </span>
-          )}
-          {days > 0 ? (
-            <span
-              className="inline-flex h-8 items-center gap-1 rounded-full border border-[var(--line)] px-2.5"
+              className="tabular inline-flex h-8 items-center gap-2 rounded-full border border-[var(--line-strong)] bg-[var(--surface)] pl-3 pr-3.5 text-xs font-medium text-[var(--fg)]"
               title={
-                "Seri koruması: bu hafta " +
+                days +
+                " gün üst üste yazdın. Seri koruması: bu hafta " +
                 freezesLeft +
                 "/" +
                 FREEZES_PER_WEEK +
-                " hakkın var. Yazmadığın bir günde otomatik kullanılır, her pazartesi yenilenir."
+                " hakkın var; yazmadığın bir günde otomatik kullanılır, her pazartesi yenilenir."
               }
-              aria-label={"Bu hafta " + freezesLeft + " seri koruması hakkın var"}
+              aria-label={days + " gün seri, bu hafta " + freezesLeft + " koruma hakkı kaldı"}
             >
-              {Array.from({ length: FREEZES_PER_WEEK }, (_, i) => (
-                <span
-                  key={i}
-                  className={
-                    "inline-flex h-5 w-5 items-center justify-center rounded-full [&>svg]:block " +
-                    (i < freezesLeft
-                      ? "bg-[var(--accent-soft)] text-[var(--accent)]"
-                      : "text-[var(--muted)] opacity-40")
-                  }
-                >
-                  <FreezeIcon />
+              <span className="inline-flex items-center gap-1.5">
+                <span className="text-[var(--accent)] [&>svg]:block">
+                  <FlameIcon />
                 </span>
-              ))}
-              <span className="tabular pl-0.5 text-[11px] text-[var(--muted)]">
-                {freezesLeft}/{FREEZES_PER_WEEK}
+                {days} gün
+              </span>
+              <span className="h-3 w-px bg-[var(--line-strong)]" aria-hidden="true"></span>
+              <span className="inline-flex items-center gap-1.5" aria-hidden="true">
+                {Array.from({ length: FREEZES_PER_WEEK }, (_, i) => (
+                  <span
+                    key={i}
+                    className={
+                      "[&>svg]:block " + (i < freezesLeft ? "text-[var(--accent)]" : "text-[var(--muted)] opacity-45")
+                    }
+                  >
+                    <ProtectionIcon filled={i < freezesLeft} />
+                  </span>
+                ))}
               </span>
             </span>
-          ) : null}
+          ) : (
+            <span className="tabular inline-flex h-8 items-center px-1 text-xs text-[var(--muted)]">Seri yok</span>
+          )}
         </div>
       </header>
 

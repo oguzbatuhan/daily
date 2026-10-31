@@ -125,16 +125,28 @@ export function ShieldIcon() {
 export function FlameIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 18 18" {...base}>
-      <path d="M9 2c.5 3 3.5 4 3.5 7.5a3.5 3.5 0 01-7 0c0-1.3.6-2 1.2-2.7C7.4 5.9 8.8 4.7 9 2z" strokeWidth="1.3" {...stroke} />
+      <path
+        d="M9 16.2c-3.4 0-5.4-2.3-5.4-5 0-2 1-3.3 2-4.6.3 1.3.8 2 1.6 2.4C6.8 6.4 7.7 3.6 10 1.6c.4 2.7 2 4 3.3 5.6.8 1.1 1.1 2.4 1.1 4 0 2.7-2 5-5.4 5z"
+        strokeWidth="1.3"
+        {...stroke}
+      />
+      <path d="M9 14.2c-1.1 0-1.8-.8-1.8-1.7 0-1.1 1-1.7 1.4-2.6.4.9 2.2 1.5 2.2 2.6 0 .9-.7 1.7-1.8 1.7z" strokeWidth="1" {...stroke} />
     </svg>
   );
 }
 
-// Snowflake: one "streak freeze"
-export function FreezeIcon() {
+// Small shield: one weekly "streak protection". filled = still available, outline = used
+export function ProtectionIcon({ filled = false }) {
   return (
-    <svg width="14" height="14" viewBox="0 0 18 18" {...base}>
-      <path d="M9 2v14M3 5.5l12 7M15 5.5l-12 7M7 3.2L9 5l2-1.8M7 14.8L9 13l2 1.8" strokeWidth="1.4" {...stroke} />
+    <svg width="13" height="13" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+      <path
+        d="M9 1.8l5.6 2v4.6c0 3.6-2.3 6.1-5.6 7.8-3.3-1.7-5.6-4.2-5.6-7.8V3.8L9 1.8z"
+        fill={filled ? "currentColor" : "none"}
+        fillOpacity={filled ? 0.22 : 0}
+        strokeWidth="1.4"
+        {...stroke}
+      />
+      {filled ? <path d="M6.4 9l1.9 1.9 3.3-3.4" strokeWidth="1.4" {...stroke} /> : null}
     </svg>
   );
 }
