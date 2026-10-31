@@ -19,35 +19,25 @@ export default defineConfig({
         id: base,
         name: "Günlük",
         short_name: "Günlük",
-        description:
-          "Sade, hızlı günlük defteri. Çevrimdışı çalışır, yedeklenir, Google ile giriş yapıp Supabase'e yedeklenir.",
+        description: "Sade günlük defteri. Yaz, etiketle, serini koru, yedekle.",
         lang: "tr",
+        dir: "ltr",
         start_url: base,
         scope: base,
         display: "standalone",
-        orientation: "portrait",
+        display_override: ["standalone", "minimal-ui"],
+        orientation: "portrait-primary",
         background_color: "#0a0a0a",
-        // Matches forced dark theme in index.css / index.html
         theme_color: "#0a0a0a",
+        categories: ["lifestyle", "productivity"],
         icons: [
-          { src: "icon-192.png", sizes: "192x192", type: "image/png" },
-          { src: "icon-512.png", sizes: "512x512", type: "image/png" },
+          { src: "icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+          { src: "icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
           {
             src: "icon-maskable-512.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",
-          },
-        ],
-        // Long-press the home screen icon -> straight to a new entry
-        shortcuts: [
-          {
-            name: "Yeni yazı",
-            short_name: "Yeni yazı",
-            url: base + "?new=1",
-            icons: [
-              { src: "icon-192.png", sizes: "192x192", type: "image/png" },
-            ],
           },
         ],
       },
