@@ -66,7 +66,7 @@ export function HistorySheet({ title = "Geçmiş", summary, toolbar, onClose, ch
 
   return (
     <div
-      className="history-backdrop fixed inset-0 z-50 flex items-end justify-center overscroll-contain bg-black/40 sm:items-stretch sm:justify-end"
+      className="history-backdrop fixed inset-0 z-50 flex items-end justify-center overscroll-contain bg-black/35 sm:items-stretch sm:justify-end"
       // The tap that opened the sheet must never close it (ghost mouse events on phones)
       onMouseDown={(e) => e.target === e.currentTarget && Date.now() - openedAt.current > 500 && closeFn.current()}
     >
@@ -75,7 +75,7 @@ export function HistorySheet({ title = "Geçmiş", summary, toolbar, onClose, ch
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="history-panel flex h-[82dvh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl border border-[var(--line)] bg-[var(--surface)] shadow-2xl sm:h-full sm:max-w-sm sm:rounded-none sm:rounded-l-3xl sm:border-r-0"
+        className="history-panel flex h-[88dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-[1.75rem] border border-[var(--line)] bg-[var(--surface)] shadow-2xl sm:h-full sm:max-w-md sm:rounded-none sm:rounded-l-[1.5rem] sm:border-r-0"
       >
         <div className="mx-auto mt-2.5 h-1 w-9 shrink-0 rounded-full bg-[var(--line-strong)] sm:hidden" aria-hidden="true"></div>
         <header className="flex shrink-0 items-start gap-3 px-5 pb-3 pt-3 sm:pt-5">
@@ -118,7 +118,7 @@ export function HistoryDay({ primary, secondary, meta, open, onToggle, children 
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="flex min-h-12 w-full items-center gap-2 rounded-lg py-2 text-left text-sm"
+        className="flex min-h-12 w-full items-center gap-2 rounded-lg py-2.5 text-left text-sm hover:bg-[var(--hover)]"
       >
         <span className={"inline-flex shrink-0 text-[var(--muted)] transition-transform " + (open ? "" : "-rotate-90")}>
           <ChevronIcon dir="down" />
@@ -128,7 +128,7 @@ export function HistoryDay({ primary, secondary, meta, open, onToggle, children 
         <span className="flex-1" aria-hidden="true"></span>
         <span className="tabular shrink-0 font-medium">{meta}</span>
       </button>
-      {open ? <div className="task-in pb-2">{children}</div> : null}
+      {open ? <div className="task-in pb-2 pl-6">{children}</div> : null}
     </section>
   );
 }

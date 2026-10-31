@@ -142,6 +142,15 @@ export default function App() {
     });
   const dayOpen = (date) => (searching ? !collapsed.has(date) : openDays.has(date));
   const toggleDay = (date) => (searching ? flip(setCollapsed)(date) : flip(setOpenDays)(date));
+  const visibleDayDates = () => groups.slice(0, historyLimit).map((g) => g.date);
+  const expandAllDays = () => {
+    if (searching) setCollapsed(new Set());
+    else setOpenDays(new Set(visibleDayDates()));
+  };
+  const collapseAllDays = () => {
+    if (searching) setCollapsed(new Set(visibleDayDates()));
+    else setOpenDays(new Set());
+  };
 
   // Opening starts fresh (newest day open, first page); an optional tag opens it already filtered
   const openHistory = (withTag) => {
@@ -272,20 +281,28 @@ export default function App() {
             <SyncBar sync={sync} />
           </div>
         </div>
-        <p className="tabular mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-[var(--muted)]">
-          <span className="whitespace-nowrap">{todayCount > 0 ? "Bugün " + todayCount + " yazı" : "Bugün henüz yazmadın"}</span>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="tabular inline-flex h-8 items-center rounded-full border border-[var(--line)] px-3 text-xs text-[var(--muted)]">
+            {todayCount > 0 ? "Bugün " + todayCount + " yazı" : "Bugün henüz yazmadın"}
+          </span>
           {days > 0 ? (
             <span
-              className="inline-flex items-center gap-1 whitespace-nowrap text-[var(--accent)] [&>svg]:shrink-0"
+              className="tabular inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--line-strong)] bg-[var(--surface)] px-3 text-xs font-medium text-[var(--fg)]"
               title="Üst üste yazılan gün sayısı"
             >
-              <FlameIcon />
-              {days} gün
+              <span className="text-[var(--accent)] [&>svg]:block">
+                <FlameIcon />
+              </span>
+              <span>{days} gün seri</span>
             </span>
-          ) : null}
+          ) : (
+            <span className="tabular inline-flex h-8 items-center rounded-full border border-[var(--line)] px-3 text-xs text-[var(--muted)]">
+              Seri yok
+            </span>
+          )}
           {days > 0 ? (
             <span
-              className="inline-flex items-center gap-0.5 [&>span]:shrink-0"
+              className="inline-flex h-8 items-center gap-1 rounded-full border border-[var(--line)] px-2.5"
               title={
                 "Seri koruması: bu hafta " +
                 freezesLeft +
@@ -296,13 +313,24 @@ export default function App() {
               aria-label={"Bu hafta " + freezesLeft + " seri koruması hakkın var"}
             >
               {Array.from({ length: FREEZES_PER_WEEK }, (_, i) => (
-                <span key={i} className={i < freezesLeft ? "text-[var(--accent)]" : "opacity-30"}>
+                <span
+                  key={i}
+                  className={
+                    "inline-flex h-5 w-5 items-center justify-center rounded-full [&>svg]:block " +
+                    (i < freezesLeft
+                      ? "bg-[var(--accent-soft)] text-[var(--accent)]"
+                      : "text-[var(--muted)] opacity-40")
+                  }
+                >
                   <FreezeIcon />
                 </span>
               ))}
+              <span className="tabular pl-0.5 text-[11px] text-[var(--muted)]">
+                {freezesLeft}/{FREEZES_PER_WEEK}
+              </span>
             </span>
           ) : null}
-        </p>
+        </div>
       </header>
 
       {showNudge ? (
@@ -392,21 +420,43 @@ export default function App() {
                   </button>
                 ) : null}
               </label>
-              {suggestions.length ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {suggestions.map((t) => (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {suggestions.length ? (
+                  <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+                    {suggestions.map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        className="tag-chip quiet"
+                        aria-pressed={tag.toLocaleLowerCase("tr-TR") === t.toLocaleLowerCase("tr-TR")}
+                        onClick={() => setTag((cur) => (cur.toLocaleLowerCase("tr-TR") === t.toLocaleLowerCase("tr-TR") ? "" : t))}
+                      >
+                        #{t}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="flex-1" aria-hidden="true" />
+                )}
+                {groups.length > 0 ? (
+                  <div className="ml-auto flex shrink-0 gap-1">
                     <button
-                      key={t}
                       type="button"
-                      className="tag-chip quiet"
-                      aria-pressed={tag.toLocaleLowerCase("tr-TR") === t.toLocaleLowerCase("tr-TR")}
-                      onClick={() => setTag((cur) => (cur.toLocaleLowerCase("tr-TR") === t.toLocaleLowerCase("tr-TR") ? "" : t))}
+                      onClick={expandAllDays}
+                      className="rounded-lg px-2 py-1 text-xs font-medium text-[var(--muted)] hover:bg-[var(--hover)] hover:text-[var(--fg)]"
                     >
-                      #{t}
+                      Aç
                     </button>
-                  ))}
-                </div>
-              ) : null}
+                    <button
+                      type="button"
+                      onClick={collapseAllDays}
+                      className="rounded-lg px-2 py-1 text-xs font-medium text-[var(--muted)] hover:bg-[var(--hover)] hover:text-[var(--fg)]"
+                    >
+                      Kapat
+                    </button>
+                  </div>
+                ) : null}
+              </div>
             </div>
           }
         >
